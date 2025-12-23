@@ -17,6 +17,7 @@ const Beneficiary = require('./models/Beneficiary');
 const StandingInstruction = require('./models/StandingInstruction');
 const Ticket = require('./models/Ticket');
 const cron = require('node-cron');
+const { sendWelcomeEmail, sendLoginAlert } = require('./utils/emailService');
 
 const app = express();
 
@@ -172,6 +173,9 @@ app.post('/api/register', async (req, res) => {
             fromAccount: 'MINT', toAccount: newAcctNum, amount: 1000, type: 'DEPOSIT', status: 'SUCCESS'
         });
 
+        // Send Welcome Email (Async - don't wait for it)
+        sendWelcomeEmail({ ownerName, email, accountNumber: newAcctNum, cifNumber }).catch(err => console.error("Email Error:", err.message));
+
         res.status(201).json({ message: "Registration Successful", accountNumber: newAcctNum });
 
     } catch (error) {
@@ -190,6 +194,9 @@ app.post('/api/login', async (req, res) => {
         // Check Password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ error: "Invalid Credentials" });
+
+        // Send Login Alert (Async)
+        sendLoginAlert(user).catch(err => console.error("Email Error:", err.message));
 
         // Create Token
         const token = jwt.sign({ id: user.accountNumber }, JWT_SECRET, { expiresIn: '1h' });

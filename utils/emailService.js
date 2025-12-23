@@ -1,0 +1,82 @@
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
+
+const sendEmail = async (to, subject, html) => {
+    try {
+        await transporter.sendMail({
+            from: `"OpenBank Pro Security" <${process.env.EMAIL_USER}>`,
+            to,
+            subject,
+            html
+        });
+        console.log(`📧 Email sent to ${to}: ${subject}`);
+    } catch (error) {
+        console.error("❌ Email Failed:", error.message);
+    }
+};
+
+const sendWelcomeEmail = async (user) => {
+    const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; padding: 20px; border-radius: 10px;">
+        <div style="background-color: #0f172a; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+            <h1 style="color: #22d3ee; margin: 0;">OpenBank <span style="color: #fff; font-weight: lighter;">Pro</span></h1>
+        </div>
+        <div style="background-color: #ffffff; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e2e8f0;">
+            <h2 style="color: #1e293b;">Welcome, ${user.ownerName}!</h2>
+            <p style="color: #475569; line-height: 1.6;">
+                Thank you for choosing OpenBank Pro. Your account has been successfully created.
+            </p>
+            
+            <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 5px 0; font-size: 14px; color: #64748b;">YOUR ACCOUNT NUMBER</p>
+                <p style="margin: 0; font-size: 24px; font-weight: bold; color: #0f172a; font-family: monospace;">${user.accountNumber}</p>
+                
+                <div style="margin-top: 15px; border-top: 1px solid #cbd5e1; padding-top: 15px;">
+                    <p style="margin: 5px 0; font-size: 14px; color: #64748b;">CIF NUMBER</p>
+                    <p style="margin: 0; font-size: 18px; font-weight: bold; color: #334155; font-family: monospace;">${user.cifNumber}</p>
+                </div>
+            </div>
+
+            <p style="color: #475569;">You can now log in to the dashboard to request your Debit Card and start transacting.</p>
+            
+            <a href="https://open-bank-pro.vercel.app/login" style="display: inline-block; background-color: #0ea5e9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 25px; font-weight: bold; margin-top: 10px;">Login to Dashboard</a>
+        </div>
+        <p style="text-align: center; color: #94a3b8; font-size: 12px; margin-top: 20px;">
+            &copy; ${new Date().getFullYear()} OpenBank Pro. Secure Banking.
+        </p>
+    </div>
+    `;
+    await sendEmail(user.email, "Welcome to OpenBank Pro - Account Details", html);
+};
+
+const sendLoginAlert = async (user) => {
+    const time = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <div style="padding: 20px; text-align: center; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="margin: 0; color: #0f172a;">New Login Detected</h2>
+        </div>
+        <div style="padding: 30px; background-color: #ffffff;">
+            <p style="color: #475569;">Hello <strong>${user.ownerName}</strong>,</p>
+            <p style="color: #475569;">We detected a new login to your OpenBank Pro account.</p>
+            
+            <div style="background-color: #fff1f2; border-left: 4px solid #f43f5e; padding: 15px; margin: 20px 0;">
+                <p style="margin: 5px 0; font-size: 13px; color: #be123c;">TIME</p>
+                <p style="margin: 0; font-weight: bold; color: #881337;">${time}</p>
+            </div>
+
+            <p style="color: #64748b; font-size: 14px;">If this was you, you can ignore this email. If not, please contact support immediately.</p>
+        </div>
+    </div>
+    `;
+    await sendEmail(user.email, "Security Alert: New Login", html);
+};
+
+module.exports = { sendWelcomeEmail, sendLoginAlert };

@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { motion } from 'framer-motion';
+import { getAccount, getCards } from '../api';
 
 const Profile = () => {
     const [user, setUser] = useState(null);
@@ -17,8 +15,8 @@ const Profile = () => {
             if (!accountNumber) return;
             try {
                 const [userRes, cardRes] = await Promise.all([
-                    axios.get(`http://localhost:5000/api/accounts/${accountNumber}`),
-                    axios.get(`http://localhost:5000/api/accounts/${accountNumber}/cards`)
+                    getAccount(accountNumber),
+                    getCards(accountNumber)
                 ]);
                 setUser(userRes.data);
                 setCards(cardRes.data);

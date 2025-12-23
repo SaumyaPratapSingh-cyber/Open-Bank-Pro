@@ -168,24 +168,8 @@ const CustomerDirectory = () => {
                                     <td className="p-5 text-right text-slate-500 text-xs font-medium">
                                         {new Date(c.createdAt).toLocaleDateString()}
                                     </td>
-                                    <td className="p-5 text-right">
-                                        <button
-                                            onClick={async (e) => {
-                                                e.stopPropagation();
-                                                if (confirm(`Resend Welcome Email to ${c.ownerName}?`)) {
-                                                    try {
-                                                        await resendWelcomeEmail(c.accountNumber);
-                                                        alert("Email Sent!");
-                                                    } catch (err) {
-                                                        alert("Failed to send email");
-                                                    }
-                                                }
-                                            }}
-                                            className="p-2 hover:bg-white/10 rounded-lg text-slate-500 hover:text-emerald-400 transition-colors mr-2"
-                                            title="Resend Welcome Email"
-                                        >
-                                            <Send size={16} />
-                                        </button>
+                                    <td className="p-5 text-right flex justify-end gap-2">
+                                        <ResendEmailButton customer={c} />
                                         <button
                                             onClick={() => navigate(`/admin/customer-360?id=${c.accountNumber}`)}
                                             className="p-2 hover:bg-white/10 rounded-lg text-slate-500 hover:text-cyan-400 transition-colors"
@@ -201,6 +185,45 @@ const CustomerDirectory = () => {
                 </div>
             </div>
         </div>
+    );
+};
+
+const ResendEmailButton = ({ customer }) => {
+    const [status, setStatus] = useState('IDLE'); // IDLE, LOADING, SUCCESS, ERROR
+
+    const handleResend = async (e) => {
+        e.stopPropagation();
+        if (status === 'LOADING') return;
+
+        setStatus('LOADING');
+        try {
+            await resendWelcomeEmail(customer.accountNumber);
+            setStatus('SUCCESS');
+            setTimeout(() => setStatus('IDLE'), 2000); // Reset after 2s
+        } catch (err) {
+            console.error("Email failed", err);
+            setStatus('ERROR');
+            setTimeout(() => setStatus('IDLE'), 3000);
+        }
+    };
+
+    return (
+        <button
+            onClick={handleResend}
+            disabled={status === 'LOADING' || status === 'SUCCESS'}
+            className={`p-2 rounded-lg transition-all duration-300 ${status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-400' : status === 'ERROR' ? 'bg-rose-500/10 text-rose-400' : 'hover:bg-white/10 text-slate-500 hover:text-emerald-400'}`}
+            title="Resend Welcome Email"
+        >
+            {status === 'LOADING' ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            ) : status === 'SUCCESS' ? (
+                <span className="text-[10px] font-bold">SENT</span>
+            ) : status === 'ERROR' ? (
+                <span className="text-[10px] font-bold">FAIL</span>
+            ) : (
+                <Send size={16} />
+            )}
+        </button>
     );
 };
 

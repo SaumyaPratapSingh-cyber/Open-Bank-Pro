@@ -201,7 +201,7 @@ const ResendEmailButton = ({ customer }) => {
             setStatus('SUCCESS');
             setTimeout(() => setStatus('IDLE'), 2000); // Reset after 2s
         } catch (err) {
-            console.error("Email failed detailed:", err.response?.data || err.message);
+            console.error("Email failed detailed:", JSON.stringify(err.response?.data || err.message));
             setStatus('ERROR');
             setTimeout(() => setStatus('IDLE'), 3000);
         }

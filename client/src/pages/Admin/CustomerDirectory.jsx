@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getAllCustomers } from '../../api';
-import { Search, Filter, ArrowUpDown, ChevronRight, Download, Users, RefreshCcw } from 'lucide-react';
+import { getAllCustomers, resendWelcomeEmail } from '../../api';
+import { Search, Filter, ArrowUpDown, ChevronRight, Download, Users, RefreshCcw, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const CustomerDirectory = () => {
@@ -169,6 +169,23 @@ const CustomerDirectory = () => {
                                         {new Date(c.createdAt).toLocaleDateString()}
                                     </td>
                                     <td className="p-5 text-right">
+                                        <button
+                                            onClick={async (e) => {
+                                                e.stopPropagation();
+                                                if (confirm(`Resend Welcome Email to ${c.ownerName}?`)) {
+                                                    try {
+                                                        await resendWelcomeEmail(c.accountNumber);
+                                                        alert("Email Sent!");
+                                                    } catch (err) {
+                                                        alert("Failed to send email");
+                                                    }
+                                                }
+                                            }}
+                                            className="p-2 hover:bg-white/10 rounded-lg text-slate-500 hover:text-emerald-400 transition-colors mr-2"
+                                            title="Resend Welcome Email"
+                                        >
+                                            <Send size={16} />
+                                        </button>
                                         <button
                                             onClick={() => navigate(`/admin/customer-360?id=${c.accountNumber}`)}
                                             className="p-2 hover:bg-white/10 rounded-lg text-slate-500 hover:text-cyan-400 transition-colors"

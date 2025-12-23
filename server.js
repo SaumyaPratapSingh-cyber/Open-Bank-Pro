@@ -360,6 +360,28 @@ app.post('/api/admin/notify', verifyToken, verifyAdmin, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// G2. Resend Welcome Email (For Old Customers)
+app.post('/api/admin/resend-welcome', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { accountNumber } = req.body;
+        const user = await Account.findOne({ accountNumber });
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        // Ensure CIF exists (Legacy Support)
+        if (!user.cifNumber) {
+            user.cifNumber = 'CIF' + Math.floor(10000000 + Math.random() * 90000000);
+            await user.save();
+        }
+
+        // Send Email
+        await sendWelcomeEmail(user);
+
+        res.json({ message: `Welcome Email Resent to ${user.email}` });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 // H. Admin Dashboard Stats (Headquarters)
 app.get('/api/admin/stats', verifyToken, verifyAdmin, async (req, res) => {
     try {

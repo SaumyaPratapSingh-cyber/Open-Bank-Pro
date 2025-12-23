@@ -6,6 +6,10 @@ const AccountSchema = new mongoose.Schema({
     cifNumber: { type: String, unique: true, sparse: true }, // Customer ID
     password: { type: String, required: true }, // New: Encrypted Password
 
+    // Password Reset
+    resetOTP: { type: String },
+    resetExpires: { type: Date },
+
     // Personal Details (KYC)
     ownerName: { type: String, required: true },
     fatherName: { type: String },

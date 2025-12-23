@@ -36,9 +36,136 @@ function Login() {
     }
   };
 
+  /* --- FORGOT PASSWORD STATE --- */
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetStep, setResetStep] = useState(1); // 1: Info, 2: OTP, 3: New Password
+  const [resetForm, setResetForm] = useState({ accountNumber: '', mobile: '', otp: '', newPassword: '' });
+  const [resetError, setResetError] = useState('');
+  const [resetMsg, setResetMsg] = useState('');
+
+  const handleForgotInit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setResetError('');
+    setResetMsg('');
+    try {
+      // Dynamic Import to avoid top-level issues if api.js isn't ready
+      const axios = require('axios');
+      await axios.post('http://localhost:5000/api/auth/forgot-password-init', {
+        accountNumber: resetForm.accountNumber,
+        mobile: resetForm.mobile
+      });
+      setResetStep(2);
+      setResetMsg('OTP Sent! Check your mobile.');
+    } catch (err) {
+      setResetError(err.response?.data?.error || 'Failed to send OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotComplete = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setResetError('');
+    try {
+      const axios = require('axios');
+      await axios.post('http://localhost:5000/api/auth/reset-password', {
+        accountNumber: resetForm.accountNumber,
+        otp: resetForm.otp,
+        newPassword: resetForm.newPassword
+      });
+      setResetMsg('Password Reset Successful! returning to login...');
+      setTimeout(() => {
+        setForgotMode(false);
+        setResetStep(1);
+        setResetForm({ accountNumber: '', mobile: '', otp: '', newPassword: '' });
+        setResetMsg('');
+      }, 3000);
+    } catch (err) {
+      setResetError(err.response?.data?.error || 'Reset Failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (forgotMode) {
+    return (
+      <div className="min-h-screen flex bg-black overflow-hidden relative items-center justify-center p-6">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=2232&auto=format&fit=crop')] bg-cover bg-center opacity-10 pointer-events-none"></div>
+
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md w-full glass-card p-8 rounded-3xl border border-white/10 bg-black/60 relative z-10">
+          <button onClick={() => setForgotMode(false)} className="text-slate-400 hover:text-white mb-6 flex items-center gap-2 text-sm font-bold uppercase tracking-widest"><ArrowRight className="rotate-180 w-4 h-4" /> Back to Login</button>
+
+          <h2 className="text-2xl font-bold text-white mb-2">Recover Access</h2>
+          <p className="text-slate-400 mb-8 text-sm">Follow the steps to secure your vault.</p>
+
+          {/* STEPS INDICATOR */}
+          <div className="flex items-center gap-2 mb-8">
+            <div className={`h-1 flex-1 rounded-full ${resetStep >= 1 ? 'bg-cyan-500' : 'bg-white/10'}`}></div>
+            <div className={`h-1 flex-1 rounded-full ${resetStep >= 2 ? 'bg-cyan-500' : 'bg-white/10'}`}></div>
+            <div className={`h-1 flex-1 rounded-full ${resetStep >= 3 ? 'bg-cyan-500' : 'bg-white/10'}`}></div>
+          </div>
+
+          {resetStep === 1 && (
+            <form onSubmit={handleForgotInit} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">Account Number</label>
+                <input type="text" className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-cyan-500 transition-all"
+                  placeholder="8899XXXX" value={resetForm.accountNumber} onChange={e => setResetForm({ ...resetForm, accountNumber: e.target.value })} required />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">Registered Mobile</label>
+                <input type="text" className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-cyan-500 transition-all"
+                  placeholder="9876543210" value={resetForm.mobile} onChange={e => setResetForm({ ...resetForm, mobile: e.target.value })} required />
+              </div>
+              <button disabled={loading} className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl mt-4 transition-all">
+                {loading ? 'Verifying...' : 'Send Details'}
+              </button>
+            </form>
+          )}
+
+          {resetStep === 2 && (
+            <div className="space-y-4">
+              <div className="bg-cyan-500/10 border border-cyan-500/30 p-4 rounded-xl text-center">
+                <p className="text-cyan-400 text-sm font-bold mb-1">OTP Sent Successfully</p>
+                <p className="text-slate-400 text-xs">Please check your mobile messages.</p>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">Enter OTP</label>
+                <input type="text" className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-cyan-500 transition-all text-center tracking-widest text-xl font-mono"
+                  placeholder="XXXXXX" value={resetForm.otp} onChange={e => setResetForm({ ...resetForm, otp: e.target.value })} required />
+              </div>
+              <button onClick={() => setResetStep(3)} className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl mt-4 transition-all">
+                Verify & Proceed
+              </button>
+            </div>
+          )}
+
+          {resetStep === 3 && (
+            <form onSubmit={handleForgotComplete} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 uppercase">New Password</label>
+                <input type="password" className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-cyan-500 transition-all"
+                  placeholder="New Secure Password" value={resetForm.newPassword} onChange={e => setResetForm({ ...resetForm, newPassword: e.target.value })} required />
+              </div>
+              <button disabled={loading} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl mt-4 transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)]">
+                {loading ? 'Reseting...' : 'Confirm New Password'}
+              </button>
+            </form>
+          )}
+
+          {resetError && <p className="mt-4 text-center text-rose-400 text-xs font-bold">{resetError}</p>}
+          {resetMsg && <p className="mt-4 text-center text-green-400 text-xs font-bold">{resetMsg}</p>}
+
+        </motion.div>
+      </div>
+    );
+  }
+
+  /* --- MAIN LOGIN RENDER --- */
   return (
     <div className="min-h-screen flex bg-black overflow-hidden relative">
-
       {/* Background Ambience */}
       <div className="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')] bg-cover bg-center opacity-20 pointer-events-none mix-blend-overlay"></div>
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/80 to-black pointer-events-none"></div>
@@ -135,6 +262,10 @@ function Login() {
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                     disabled={loading}
                   />
+                </div>
+                {/* FORGOT PASSWORD LINK */}
+                <div className="flex justify-end">
+                  <button type="button" onClick={() => setForgotMode(true)} className="text-xs text-cyan-400 hover:text-cyan-300 font-bold tracking-wide">Forgot Password?</button>
                 </div>
               </div>
 

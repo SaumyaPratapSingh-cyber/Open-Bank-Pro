@@ -214,6 +214,72 @@ app.post('/api/login', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+}
+
+// 3. FORGOT PASSWORD - INIT (Send OTP)
+app.post('/api/auth/forgot-password-init', async (req, res) => {
+    try {
+        const { accountNumber, mobile } = req.body;
+
+        // Verify User
+        const user = await Account.findOne({ accountNumber });
+        if (!user) return res.status(404).json({ error: "Account not found" });
+
+        if (user.mobile !== mobile) return res.status(400).json({ error: "Mobile number does not match our records" });
+
+        // Generate OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 Minutes
+
+        // Save to DB
+        user.resetOTP = otp;
+        user.resetExpires = expires;
+        await user.save();
+
+        // Send OTP via SMS
+        const { sendSMS } = require('./utils/smsService');
+        await sendSMS(mobile, `Your OpenBank OTP for Password Reset is: ${otp}. Valid for 10 minutes. Do not share this with anyone.`);
+
+        res.json({ message: "OTP sent to your registered mobile number." });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 4. FORGOT PASSWORD - RESET (Verify OTP & Update Password)
+app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+        const { accountNumber, otp, newPassword } = req.body;
+
+        const user = await Account.findOne({ accountNumber });
+        if (!user) return res.status(404).json({ error: "Account not found" });
+
+        // Check OTP
+        if (!user.resetOTP || user.resetOTP !== otp) {
+            return res.status(400).json({ error: "Invalid OTP" });
+        }
+
+        // Check Expiry
+        if (user.resetExpires < new Date()) {
+            return res.status(400).json({ error: "OTP Expired. Please try again." });
+        }
+
+        // Hash New Password
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+
+        // Clear OTP
+        user.resetOTP = undefined;
+        user.resetExpires = undefined;
+
+        await user.save();
+
+        res.json({ message: "Password Reset Successful! You can now login." });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // ==========================

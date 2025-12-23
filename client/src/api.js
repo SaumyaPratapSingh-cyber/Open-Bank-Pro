@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+// const API = axios.create({ baseURL: 'http://localhost:5000/api' });
 const API = axios.create({ baseURL: 'https://open-bank-pro.onrender.com/api' });
 
 // Add a request interceptor to attach the Token to every request (if we have one)

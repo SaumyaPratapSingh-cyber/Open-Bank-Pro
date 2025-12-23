@@ -9,17 +9,14 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendEmail = async (to, subject, html) => {
-    try {
-        await transporter.sendMail({
-            from: `"OpenBank Pro Security" <${process.env.EMAIL_USER}>`,
-            to,
-            subject,
-            html
-        });
-        console.log(`📧 Email sent to ${to}: ${subject}`);
-    } catch (error) {
-        console.error("❌ Email Failed:", error.message);
-    }
+    // Let the error propagate so the caller handles it
+    await transporter.sendMail({
+        from: `"OpenBank Pro Security" <${process.env.EMAIL_USER}>`,
+        to,
+        subject,
+        html
+    });
+    console.log(`📧 Email sent to ${to}: ${subject}`);
 };
 
 const sendWelcomeEmail = async (user) => {

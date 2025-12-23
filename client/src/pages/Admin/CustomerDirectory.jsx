@@ -158,7 +158,7 @@ const CustomerDirectory = () => {
                                         <StatusBadge status={c.kycStatus} risk={c.riskRating} />
                                     </td>
                                     <td className="p-5 text-right font-mono text-slate-300 font-bold">
-                                        ₹{c.balance.toLocaleString()}
+                                        ₹{(c.balances?.INR || c.balance || 0).toLocaleString()}
                                     </td>
                                     <td className="p-5">
                                         <span className={`text-[10px] font-bold px-2 py-1 rounded border uppercase tracking-wider ${c.role === 'ADMIN' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'border-transparent text-slate-500'}`}>

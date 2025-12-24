@@ -1,3 +1,11 @@
+import { useState, useEffect, useRef } from 'react';
+import { toast, Toaster } from 'react-hot-toast';
+import { Wallet, ScanLine, QrCode, ShieldCheck, Smartphone, ArrowRight, History, Download, KeyRound, AlertTriangle, Copy, CheckCircle, Loader } from 'lucide-react';
+import QRCode from 'react-qr-code';
+import { Scanner } from '@yudiel/react-qr-scanner';
+import html2canvas from 'html2canvas';
+
+import API from '../api';
 import PinInput from '../components/PinInput';
 
 function UPI() {

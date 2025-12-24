@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calculator, ArrowRight, CheckCircle, FileText, Loader, ShieldCheck, Download, ChevronRight } from 'lucide-react';
+import { X, Calculator, ArrowRight, CheckCircle, ShieldCheck, Download, KeyRound } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { createInvestment } from '../api';
+import { createInvestment, validateUpiPin } from '../api';
 import toast from 'react-hot-toast';
+import PinInput from './PinInput';
 
 const COLORS = ['#22d3ee', '#34d399']; // Cyan-400, Emerald-400
 
@@ -16,6 +17,7 @@ export default function InvestmentWizard({ onClose, onSuccess, account }) {
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
     const [createdInvestment, setCreatedInvestment] = useState(null);
+    const [pin, setPin] = useState(['', '', '', '', '', '']);
 
     // Calculations
     const interestRate = type === 'FD' ? 6.5 : 7.0; // Simplified rates
@@ -50,10 +52,26 @@ export default function InvestmentWizard({ onClose, onSuccess, account }) {
         { name: 'Interest', value: calculations.interest }
     ];
 
-    const handleCreate = async () => {
+    const handlePinSubmit = async () => {
         setLoading(true);
+        try {
+            if (pin.join('').length !== 6) throw new Error("Enter complete 6-digit PIN");
+
+            // Verify PIN
+            await validateUpiPin({ accountNumber: account.accountNumber, pin: pin.join('') });
+
+            // If valid, proceed to create investment
+            setStep(4); // Processing Step
+        } catch (err) {
+            toast.error(err.response?.data?.error || "Invalid UPI PIN");
+            setPin(['', '', '', '', '', '']); // Reset PIN
+            setLoading(false);
+        }
+    };
+
+    const handleCreate = async () => {
         // Simulate "Banking Process" lines
-        const steps = ['Verifying Balance...', 'Creating Ledger Entry...', 'Allocating Bonds...', 'Finalizing Investment...'];
+        const steps = ['Verifying Auth...', 'Creating Ledger Entry...', 'Allocating Bonds...', 'Finalizing Investment...'];
 
         for (const s of steps) {
             toast.loading(s, { id: 'process', duration: 1000, style: { background: '#1e293b', color: '#fff' } });
@@ -69,10 +87,11 @@ export default function InvestmentWizard({ onClose, onSuccess, account }) {
             });
             toast.success("Investment Bond Issued!", { id: 'process', style: { background: '#1e293b', color: '#10b981' } });
             setCreatedInvestment(res.data);
-            setStep(4); // Success Step
+            setStep(5); // Success Step
             if (onSuccess) onSuccess();
         } catch (err) {
             toast.error(err.response?.data?.error || "Investment Failed", { id: 'process', style: { background: '#1e293b', color: '#f43f5e' } });
+            setStep(2); // Go back to review on failure
         } finally {
             setLoading(false);
         }
@@ -95,9 +114,13 @@ export default function InvestmentWizard({ onClose, onSuccess, account }) {
                             </div>
                             Investment Simulator
                         </h2>
-                        <p className="text-slate-400 text-sm mt-1">Step {step} of {step === 4 ? 4 : 3}: <span className="text-cyan-400 font-bold">{step === 1 ? 'Configure' : step === 2 ? 'Review' : step === 3 ? 'Processing' : 'Success'}</span></p>
+                        <p className="text-slate-400 text-sm mt-1">
+                            Step {step} of 5: <span className="text-cyan-400 font-bold">
+                                {step === 1 ? 'Configure' : step === 2 ? 'Review' : step === 3 ? 'Authenticate' : step === 4 ? 'Processing' : 'Success'}
+                            </span>
+                        </p>
                     </div>
-                    {step !== 3 && step !== 4 && (
+                    {step !== 4 && step !== 5 && (
                         <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition text-slate-400 hover:text-white">
                             <X className="w-6 h-6" />
                         </button>
@@ -321,10 +344,48 @@ export default function InvestmentWizard({ onClose, onSuccess, account }) {
                             </motion.div>
                         )}
 
-                        {/* STEP 3: PROCESSING */}
+                        {/* STEP 3: AUTHENTICATE (NEW) */}
                         {step === 3 && (
+                            <motion.div key="step3" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }}>
+                                <div className="max-w-md mx-auto text-center py-8">
+                                    <div className="mb-8">
+                                        <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-400 border border-emerald-500/20">
+                                            <KeyRound className="w-10 h-10" />
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-white mb-2">Authorize Transaction</h3>
+                                        <p className="text-slate-400 text-sm">Enter your 6-digit UPI PIN to verify this investment of <span className="text-white font-bold">₹{amount.toLocaleString()}</span></p>
+                                    </div>
+
+                                    <div className="bg-black/40 border border-white/10 rounded-2xl p-8 mb-8 backdrop-blur-sm">
+                                        <PinInput values={pin} setValues={setPin} autoFocus={true} />
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <button
+                                            onClick={() => setStep(2)}
+                                            className="flex-1 py-3 bg-slate-800 text-slate-300 rounded-xl font-bold hover:bg-slate-700 transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handlePinSubmit}
+                                            disabled={loading || pin.join('').length !== 6}
+                                            className="flex-2 w-full py-3 bg-emerald-600 disabled:opacity-50 text-white rounded-xl font-bold hover:bg-emerald-500 transition-colors shadow-lg flex items-center justify-center gap-2"
+                                        >
+                                            {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Verify & Pay'}
+                                        </button>
+                                    </div>
+                                    <p className="mt-6 text-xs text-slate-500 flex items-center justify-center gap-1">
+                                        <ShieldCheck className="w-3 h-3" /> Secure Verification via OpenBank UPI
+                                    </p>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* STEP 4: PROCESSING */}
+                        {step === 4 && (
                             <motion.div
-                                key="step3"
+                                key="step4"
                                 onAnimationComplete={() => handleCreate()}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -334,14 +395,14 @@ export default function InvestmentWizard({ onClose, onSuccess, account }) {
                                     <div className="w-24 h-24 border-4 border-slate-700 border-t-cyan-500 rounded-full animate-spin"></div>
                                     <ShieldCheck className="w-8 h-8 text-cyan-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-2">Processing...</h3>
-                                <p className="text-slate-500">Do not refresh the page</p>
+                                <h3 className="text-xl font-bold text-white mb-2">Processing Investment...</h3>
+                                <p className="text-slate-500">Connecting to Core Banking System</p>
                             </motion.div>
                         )}
 
-                        {/* STEP 4: SUCCESS */}
-                        {step === 4 && (
-                            <motion.div key="step4" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-8">
+                        {/* STEP 5: SUCCESS */}
+                        {step === 5 && (
+                            <motion.div key="step5" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center py-8">
                                 <motion.div
                                     initial={{ scale: 0 }} animate={{ scale: 1 }}
                                     className="w-24 h-24 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)]"

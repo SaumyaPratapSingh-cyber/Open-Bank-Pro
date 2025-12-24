@@ -39,6 +39,7 @@ export const markNotificationRead = (id) => API.put(`/notifications/${id}/read`)
 // Upgrade: UPI, Invest, Loans
 export const verifyVpa = (vpa) => API.post('/upi/verify', { vpa });
 export const payUpi = (data) => API.post('/upi/pay', data);
+export const validateUpiPin = (data) => API.post('/upi/validate-pin', data);
 
 export const createInvestment = (data) => API.post('/investments', data);
 export const getInvestments = (id) => API.get(`/accounts/${id}/investments`);

@@ -1445,6 +1445,24 @@ app.post('/api/upi/set-pin', verifyToken, async (req, res) => {
     }
 });
 
+// 3.1 Validate PIN (For other modules like Investment)
+app.post('/api/upi/validate-pin', verifyToken, async (req, res) => {
+    try {
+        const { accountNumber, pin } = req.body;
+        const user = await Account.findOne({ accountNumber });
+
+        if (!user) return res.status(404).json({ error: "Account not found" });
+        if (!user.upiPin) return res.status(400).json({ error: "UPI PIN not set. Please set it in UPI section." });
+
+        const isMatch = await bcrypt.compare(pin, user.upiPin);
+        if (!isMatch) return res.status(400).json({ error: "Invalid UPI PIN" });
+
+        res.json({ success: true, message: "PIN Verified" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // 4. Pay via UPI
 app.post('/api/upi/pay', verifyToken, async (req, res) => {
     const { fromAccount, toVpa, amount, pin } = req.body;

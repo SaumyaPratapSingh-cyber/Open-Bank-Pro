@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { getAccount, getCards } from '../api';
 
 const Profile = () => {

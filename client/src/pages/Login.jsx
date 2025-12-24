@@ -49,14 +49,15 @@ function Login() {
     setResetError('');
     setResetMsg('');
     try {
-      // Dynamic Import to avoid top-level issues if api.js isn't ready
+      // Dynamic Import
       const axios = require('axios');
-      await axios.post('http://localhost:5000/api/auth/forgot-password-init', {
+      await axios.post('https://open-bank-pro.onrender.com/api/auth/forgot-password-init', {
         accountNumber: resetForm.accountNumber,
-        mobile: resetForm.mobile
+        mobile: resetForm.mobile,
+        email: resetForm.mobile.includes('@') ? resetForm.mobile : undefined // Naive check if user entered email in mobile field
       });
       setResetStep(2);
-      setResetMsg('OTP Sent! Check your mobile.');
+      setResetMsg('OTP Sent! Check your mobile/email.');
     } catch (err) {
       setResetError(err.response?.data?.error || 'Failed to send OTP');
     } finally {
@@ -70,7 +71,7 @@ function Login() {
     setResetError('');
     try {
       const axios = require('axios');
-      await axios.post('http://localhost:5000/api/auth/reset-password', {
+      await axios.post('https://open-bank-pro.onrender.com/api/auth/reset-password', {
         accountNumber: resetForm.accountNumber,
         otp: resetForm.otp,
         newPassword: resetForm.newPassword

@@ -81,4 +81,25 @@ const sendLoginAlert = async (user) => {
     await sendEmail(user.email, "Security Alert: New Login", html);
 };
 
-module.exports = { sendWelcomeEmail, sendLoginAlert };
+const sendOTP = async (email, otp) => {
+    const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <div style="padding: 20px; text-align: center; border-bottom: 1px solid #e2e8f0;">
+            <h2 style="margin: 0; color: #0f172a;">Password Reset</h2>
+        </div>
+        <div style="padding: 30px; background-color: #ffffff;">
+            <p style="color: #475569;">You requested a password reset for your OpenBank Pro account.</p>
+            <p style="color: #475569;">Your OTP is:</p>
+            
+            <div style="background-color: #f1f5f9; padding: 15px; margin: 20px 0; text-align: center;">
+                <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #0f172a;">${otp}</span>
+            </div>
+
+            <p style="color: #64748b; font-size: 14px;">This OTP is valid for 10 minutes. Do not share it with anyone.</p>
+        </div>
+    </div>
+    `;
+    await sendEmail(email, "Password Reset OTP", html);
+};
+
+module.exports = { sendWelcomeEmail, sendLoginAlert, sendOTP };

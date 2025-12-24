@@ -17,7 +17,7 @@ const Beneficiary = require('./models/Beneficiary');
 const StandingInstruction = require('./models/StandingInstruction');
 const Ticket = require('./models/Ticket');
 const cron = require('node-cron');
-const { sendWelcomeEmail, sendLoginAlert } = require('./utils/emailService');
+const { sendWelcomeEmail, sendLoginAlert, sendOTP } = require('./utils/emailService');
 
 const app = express();
 
@@ -214,18 +214,23 @@ app.post('/api/login', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
-}
+});
 
 // 3. FORGOT PASSWORD - INIT (Send OTP)
 app.post('/api/auth/forgot-password-init', async (req, res) => {
     try {
-        const { accountNumber, mobile } = req.body;
+        const { accountNumber, mobile, email } = req.body;
 
         // Verify User
         const user = await Account.findOne({ accountNumber });
         if (!user) return res.status(404).json({ error: "Account not found" });
 
-        if (user.mobile !== mobile) return res.status(400).json({ error: "Mobile number does not match our records" });
+        // Verify Contact Details (Check Mobile OR Email)
+        if (mobile && user.mobile !== mobile) return res.status(400).json({ error: "Mobile number does not match our records" });
+        if (email && user.email !== email) return res.status(400).json({ error: "Email does not match our records" });
+
+        // If neither provided
+        if (!mobile && !email) return res.status(400).json({ error: "Please provide registered Mobile or Email" });
 
         // Generate OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -236,11 +241,19 @@ app.post('/api/auth/forgot-password-init', async (req, res) => {
         user.resetExpires = expires;
         await user.save();
 
-        // Send OTP via SMS
-        const { sendSMS } = require('./utils/smsService');
-        await sendSMS(mobile, `Your OpenBank OTP for Password Reset is: ${otp}. Valid for 10 minutes. Do not share this with anyone.`);
+        // Send OTP via Email (Primary)
+        await sendOTP(user.email, otp).catch(err => console.error("Email OTP Failed:", err));
 
-        res.json({ message: "OTP sent to your registered mobile number." });
+        // Send OTP via SMS (Optional / Fallback) - If credentials exist
+        try {
+            // Only try SMS if mobile provided and service exists
+            const { sendSMS } = require('./utils/smsService');
+            await sendSMS(user.mobile, `Your OpenBank OTP for Password Reset is: ${otp}. Valid for 10 mins.`);
+        } catch (smsErr) {
+            console.log("SMS Service Skipped/Failed:", smsErr.message);
+        }
+
+        res.json({ message: `OTP sent to your registered Email (${user.email}) and Mobile.` });
 
     } catch (error) {
         res.status(500).json({ error: error.message });

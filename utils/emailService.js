@@ -6,16 +6,14 @@ const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
     secure: false, // true for 465, false for other ports
-    pool: true, // Use pooled connections
-    maxConnections: 5, // Limit concurrent connections
-    maxMessages: 100, // Limit messages per connection
+    pool: false, // Disable pooling for serverless compatibility
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
-    connectionTimeout: 10000, // 10 seconds
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
+    connectionTimeout: 20000, // 20 seconds
+    greetingTimeout: 20000,
+    socketTimeout: 20000,
     debug: true,
     logger: true
 });

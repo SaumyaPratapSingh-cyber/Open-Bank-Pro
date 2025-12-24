@@ -468,6 +468,47 @@ app.post('/api/admin/resend-welcome', verifyToken, verifyAdmin, async (req, res)
         res.status(500).json({ error: error.message });
     }
 });
+// DEBUG: Test Email Connection
+app.get('/api/admin/debug-email', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const nodemailer = require('nodemailer');
+        // Check Vars
+        const userSet = !!process.env.EMAIL_USER;
+        const passSet = !!process.env.EMAIL_PASS;
+
+        // Manual Transport for Test
+        const testTransporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false,
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            },
+            connectionTimeout: 10000
+        });
+
+        // Verify
+        await testTransporter.verify();
+
+        res.json({
+            status: "SUCCESS",
+            env: { user: userSet, pass: passSet },
+            message: "SMTP Connection Verified. Credentials are correct."
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: "FAILED",
+            error: error.message,
+            stack: error.stack,
+            env: {
+                user: !!process.env.EMAIL_USER,
+                pass: !!process.env.EMAIL_PASS
+            }
+        });
+    }
+});
+
 // H. Admin Dashboard Stats (Headquarters)
 app.get('/api/admin/stats', verifyToken, verifyAdmin, async (req, res) => {
     try {

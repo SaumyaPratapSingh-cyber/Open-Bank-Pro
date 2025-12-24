@@ -17,7 +17,7 @@ const Beneficiary = require('./models/Beneficiary');
 const StandingInstruction = require('./models/StandingInstruction');
 const Ticket = require('./models/Ticket');
 const cron = require('node-cron');
-const { sendWelcomeEmail, sendLoginAlert, sendOTP } = require('./utils/emailService');
+const { sendWelcomeEmail, sendLoginAlert, sendOTP, sendTicketResolvedEmail, sendAdminMessageEmail } = require('./utils/emailService');
 
 const app = express();
 
@@ -433,6 +433,12 @@ app.post('/api/admin/notify', verifyToken, verifyAdmin, async (req, res) => {
             type: type || 'INFO',
             sender: 'Admin'
         });
+
+        // Send Email
+        const user = await Account.findOne({ accountNumber });
+        if (user) {
+            sendAdminMessageEmail(user, title, message, type || 'INFO').catch(err => console.error("Admin Msg Email Failed:", err.message));
+        }
 
         res.json(newNotif);
     } catch (error) {
@@ -1620,6 +1626,12 @@ app.post('/api/tickets/resolve/:id', verifyToken, verifyAdmin, async (req, res) 
             type: ticket.status === 'RESOLVED' ? 'SUCCESS' : 'WARNING',
             sender: 'Admin'
         }], { session });
+
+        // Send Email
+        const user = await Account.findOne({ accountNumber: ticket.userId }).session(session);
+        if (user) {
+            sendTicketResolvedEmail(user, ticket).catch(err => console.error("Ticket Email Failed:", err.message));
+        }
 
         await session.commitTransaction();
         res.json({ message: "Ticket Updated", ticket });

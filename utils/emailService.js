@@ -2,15 +2,17 @@ const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // true for 465, false for other ports
+    port: 587,
+    secure: false, // true for 465, false for other ports
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
-    connectionTimeout: 30000, // 30 seconds
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
+    connectionTimeout: 60000, // 60 seconds
+    greetingTimeout: 60000,
+    socketTimeout: 60000,
+    debug: true, // Show debug output
+    logger: true // Log to console
 });
 
 const sendEmail = async (to, subject, html) => {
@@ -102,4 +104,59 @@ const sendOTP = async (email, otp) => {
     await sendEmail(email, "Password Reset OTP", html);
 };
 
-module.exports = { sendWelcomeEmail, sendLoginAlert, sendOTP };
+const sendTicketResolvedEmail = async (user, ticket) => {
+    const statusColor = ticket.status === 'RESOLVED' ? '#10b981' : '#f43f5e';
+    const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <div style="padding: 20px; text-align: center; border-bottom: 1px solid #e2e8f0; background-color: #f8fafc;">
+            <h2 style="margin: 0; color: #0f172a;">Support Ticket Update</h2>
+        </div>
+        <div style="padding: 30px; background-color: #ffffff;">
+            <p style="color: #475569;">Hello <strong>${user.ownerName}</strong>,</p>
+            <p style="color: #475569;">Your support ticket <strong style="font-family: monospace;">#${ticket._id}</strong> has been updated.</p>
+            
+            <div style="background-color: ${statusColor}15; border-left: 4px solid ${statusColor}; padding: 15px; margin: 20px 0;">
+                <p style="margin: 5px 0; font-size: 13px; color: #64748b; font-weight: bold; uppercase;">STATUS</p>
+                <p style="margin: 0; font-weight: bold; color: ${statusColor}; font-size: 18px;">${ticket.status}</p>
+                
+                <p style="margin: 15px 0 5px 0; font-size: 13px; color: #64748b; font-weight: bold; uppercase;">ADMIN RESPONSE</p>
+                <p style="margin: 0; color: #334155; line-height: 1.5;">${ticket.adminResponse}</p>
+            </div>
+
+            <p style="color: #64748b; font-size: 14px;">You can view the full details in the Support section of your dashboard.</p>
+        </div>
+    </div>
+    `;
+    await sendEmail(user.email, `Ticket Updated: ${ticket.issueType}`, html);
+};
+
+const sendAdminMessageEmail = async (user, title, message, type) => {
+    const colorMap = {
+        'INFO': '#0ea5e9', // Blue
+        'SUCCESS': '#10b981', // Green
+        'WARNING': '#f59e0b', // Amber
+        'ALERT': '#f43f5e' // Red
+    };
+    const color = colorMap[type] || colorMap['INFO'];
+
+    const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <div style="padding: 20px; border-bottom: 4px solid ${color}; background-color: #ffffff;">
+            <h2 style="margin: 0; color: #0f172a;">${title}</h2>
+        </div>
+        <div style="padding: 30px; background-color: #ffffff;">
+            <p style="color: #475569;">Hello <strong>${user.ownerName}</strong>,</p>
+            
+            <div style="font-size: 16px; color: #334155; line-height: 1.6; whitespace-pre-line;">
+                ${message.replace(/\n/g, '<br>')}
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+            <p style="color: #94a3b8; font-size: 12px; text-align: center;">This is an important notification from OpenBank Pro.</p>
+        </div>
+    </div>
+    `;
+    await sendEmail(user.email, title, html);
+};
+
+module.exports = { sendWelcomeEmail, sendLoginAlert, sendOTP, sendTicketResolvedEmail, sendAdminMessageEmail };

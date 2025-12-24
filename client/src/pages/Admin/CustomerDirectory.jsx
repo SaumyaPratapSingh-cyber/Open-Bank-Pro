@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getAllCustomers, resendWelcomeEmail } from '../../api';
+import axios from 'axios';
 import { Search, Filter, ArrowUpDown, ChevronRight, Download, Users, RefreshCcw, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,6 +9,19 @@ const CustomerDirectory = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('ALL');
+
+    const handleTestEmail = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            // Using relative path assuming proxy or same domain, otherwise fallback to configured API logic
+            const res = await axios.get('/api/admin/debug-email', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert("SMTP Status: " + JSON.stringify(res.data, null, 2));
+        } catch (err) {
+            alert("SMTP Test Failed: " + JSON.stringify(err.response?.data || err.message));
+        }
+    };
 
     const [error, setError] = useState(null);
 
@@ -55,6 +69,12 @@ const CustomerDirectory = () => {
                     <p className="text-slate-400 text-sm font-medium">Global registry of all bank account holders.</p>
                 </div>
                 <div className="flex gap-3">
+                    <button
+                        onClick={handleTestEmail}
+                        className="flex items-center gap-2 px-4 py-2 bg-purple-500/10 text-purple-400 rounded-xl border border-purple-500/20 hover:bg-purple-500/20 transition-colors text-xs font-bold uppercase tracking-wider"
+                    >
+                        🐞 Test Email
+                    </button>
                     <button className="flex items-center gap-2 px-4 py-2 bg-white/5 text-slate-300 rounded-xl border border-white/5 hover:bg-white/10 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider">
                         <Download size={14} /> Export CSV
                     </button>

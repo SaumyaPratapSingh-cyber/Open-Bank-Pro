@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { loginUser } from '../api';
+import API from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock, User, ArrowRight, ShieldCheck, Globe, ScanLine } from 'lucide-react';
@@ -49,12 +50,11 @@ function Login() {
     setResetError('');
     setResetMsg('');
     try {
-      // Dynamic Import
-      const axios = require('axios');
-      await axios.post('https://open-bank-pro.onrender.com/api/auth/forgot-password-init', {
+      // Use configured API client
+      await API.post('/auth/forgot-password-init', {
         accountNumber: resetForm.accountNumber,
         mobile: resetForm.mobile,
-        email: resetForm.mobile.includes('@') ? resetForm.mobile : undefined // Naive check if user entered email in mobile field
+        email: resetForm.mobile.includes('@') ? resetForm.mobile : undefined
       });
       setResetStep(2);
       setResetMsg('OTP Sent! Check your mobile/email.');
@@ -70,8 +70,7 @@ function Login() {
     setLoading(true);
     setResetError('');
     try {
-      const axios = require('axios');
-      await axios.post('https://open-bank-pro.onrender.com/api/auth/reset-password', {
+      await API.post('/auth/reset-password', {
         accountNumber: resetForm.accountNumber,
         otp: resetForm.otp,
         newPassword: resetForm.newPassword

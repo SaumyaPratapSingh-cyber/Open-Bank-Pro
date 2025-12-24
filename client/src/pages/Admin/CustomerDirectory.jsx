@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { getAllCustomers, resendWelcomeEmail, debugEmail } from '../../api';
 import axios from 'axios';
 import { Search, Filter, ArrowUpDown, ChevronRight, Download, Users, RefreshCcw, Send } from 'lucide-react';

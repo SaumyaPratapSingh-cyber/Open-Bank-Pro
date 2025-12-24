@@ -225,9 +225,12 @@ app.post('/api/auth/forgot-password-init', async (req, res) => {
         const user = await Account.findOne({ accountNumber });
         if (!user) return res.status(404).json({ error: "Account not found" });
 
-        // Verify Contact Details (Check Mobile OR Email)
-        if (mobile && user.mobile !== mobile) return res.status(400).json({ error: "Mobile number does not match our records" });
-        if (email && user.email !== email) return res.status(400).json({ error: "Email does not match our records" });
+        // Verify Contact Details (Check Mobile OR Email) - Relaxed Check
+        const cleanMobile = mobile ? mobile.trim() : '';
+        const cleanEmail = email ? email.trim() : '';
+
+        if (cleanMobile && user.mobile !== cleanMobile) return res.status(400).json({ error: "Mobile number does not match our records" });
+        if (cleanEmail && user.email !== cleanEmail) return res.status(400).json({ error: "Email does not match our records" });
 
         // If neither provided
         if (!mobile && !email) return res.status(400).json({ error: "Please provide registered Mobile or Email" });

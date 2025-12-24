@@ -4,8 +4,8 @@ const path = require('path');
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // true for 465, false for other ports
+    port: 465,
+    secure: true, // true for 465, false for other ports
     pool: false, // Disable pooling for serverless compatibility
     auth: {
         user: process.env.EMAIL_USER,

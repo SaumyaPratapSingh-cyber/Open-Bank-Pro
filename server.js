@@ -482,8 +482,8 @@ app.get('/api/admin/debug-email', verifyToken, verifyAdmin, async (req, res) => 
         // Manual Transport for Test
         const testTransporter = nodemailer.createTransport({
             host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
+            port: 465,
+            secure: true,
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS

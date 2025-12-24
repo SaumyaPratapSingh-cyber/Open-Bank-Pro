@@ -1319,6 +1319,21 @@ app.delete('/api/autopay/:id', verifyToken, async (req, res) => {
 // 💳 VIRTUAL CARD ROUTES (Module 4)
 // ==========================
 
+// Get Cards by Account (Consistent with other modules)
+app.get('/api/accounts/:accountNumber/cards', verifyToken, async (req, res) => {
+    try {
+        // Security Check: Only Owner or Admin
+        if (req.user.id !== req.params.accountNumber && req.user.role !== 'ADMIN') {
+            return res.status(403).json({ error: "Access Denied" });
+        }
+
+        const cards = await Card.find({ accountNumber: req.params.accountNumber });
+        res.json(cards);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Get Card Details
 app.get('/api/cards/my-card', verifyToken, async (req, res) => {
     try {

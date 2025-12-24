@@ -118,7 +118,7 @@ const Profile = () => {
                         >
                             <h3 className="text-slate-400 text-xs uppercase mb-1 tracking-wider">Total Balance</h3>
                             <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400 drop-shadow-md">
-                                ₹ {user.balance.toLocaleString('en-IN')}
+                                ₹ {(user.balances?.INR ?? user.balance ?? 0).toLocaleString('en-IN')}
                             </div>
                         </motion.div>
 
@@ -127,12 +127,12 @@ const Profile = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
                             className="p-6 rounded-2xl bg-gradient-to-r from-blue-900/40 to-cyan-900/40 backdrop-blur-xl border border-white/10 flex items-center justify-between group cursor-pointer hover:border-cyan-500/30 transition-all shadow-glass"
-                            onClick={() => navigator.clipboard.writeText(user.upiId)}
+                            onClick={() => navigator.clipboard.writeText(user.primaryVpa || user.upiId || user.upiIds?.[0])}
                         >
                             <div>
                                 <h3 className="text-cyan-300/80 text-xs uppercase mb-1 tracking-wider">Default UPI ID</h3>
                                 <div className="text-lg font-mono text-white flex items-center gap-2">
-                                    {user.upiId || 'Not Assigned'}
+                                    {user.primaryVpa || user.upiId || user.upiIds?.[0] || 'Not Assigned'}
                                     <svg className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                     </svg>

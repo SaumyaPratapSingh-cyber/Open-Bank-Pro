@@ -17,7 +17,17 @@ const Beneficiary = require('./models/Beneficiary');
 const StandingInstruction = require('./models/StandingInstruction');
 const Ticket = require('./models/Ticket');
 const cron = require('node-cron');
-const { sendWelcomeEmail, sendLoginAlert, sendOTP, sendTicketResolvedEmail, sendAdminMessageEmail } = require('./utils/emailService');
+// Email Service Removed as per user request
+
+// ... (other code)
+
+// G2. Resend Welcome Email - REMOVED
+// app.post('/api/admin/resend-welcome', ...)
+
+// DEBUG: Test Email Connection - REMOVED
+// app.get('/api/admin/debug-email', ...)
+
+// ...
 
 const app = express();
 
@@ -173,8 +183,8 @@ app.post('/api/register', async (req, res) => {
             fromAccount: 'MINT', toAccount: newAcctNum, amount: 1000, type: 'DEPOSIT', status: 'SUCCESS'
         });
 
-        // Send Welcome Email (Async - don't wait for it)
-        sendWelcomeEmail({ ownerName, email, accountNumber: newAcctNum, cifNumber }).catch(err => console.error("Email Error:", err.message));
+        // Send Welcome Email (Removed)
+        // sendWelcomeEmail({ ownerName, email, accountNumber: newAcctNum, cifNumber }).catch(err => console.error("Email Error:", err.message));
 
         res.status(201).json({ message: "Registration Successful", accountNumber: newAcctNum });
 
@@ -437,11 +447,11 @@ app.post('/api/admin/notify', verifyToken, verifyAdmin, async (req, res) => {
             sender: 'Admin'
         });
 
-        // Send Email (Fire-and-Forget)
-        const user = await Account.findOne({ accountNumber });
-        if (user) {
-            sendAdminMessageEmail(user, title, message, type || 'INFO').catch(err => console.error("Admin Msg Email Failed:", err.message));
-        }
+        // Send Email (Removed)
+        // const user = await Account.findOne({ accountNumber });
+        // if (user) {
+        //     sendAdminMessageEmail(user, title, message, type || 'INFO').catch(err => console.error("Admin Msg Email Failed:", err.message));
+        // }
 
         res.json(newNotif);
     } catch (error) {
@@ -469,46 +479,6 @@ app.post('/api/admin/resend-welcome', verifyToken, verifyAdmin, async (req, res)
         res.json({ message: `Welcome Email Resent to ${user.email}` });
     } catch (error) {
         res.status(500).json({ error: error.message });
-    }
-});
-// DEBUG: Test Email Connection
-app.get('/api/admin/debug-email', verifyToken, verifyAdmin, async (req, res) => {
-    try {
-        const nodemailer = require('nodemailer');
-        // Check Vars
-        const userSet = !!process.env.EMAIL_USER;
-        const passSet = !!process.env.EMAIL_PASS;
-
-        // Manual Transport for Test
-        const testTransporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true,
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            },
-            connectionTimeout: 10000
-        });
-
-        // Verify
-        await testTransporter.verify();
-
-        res.json({
-            status: "SUCCESS",
-            env: { user: userSet, pass: passSet },
-            message: "SMTP Connection Verified. Credentials are correct."
-        });
-    } catch (error) {
-        res.status(500).json({
-            status: "FAILED",
-            error: error.message,
-            stack: error.stack,
-            env: {
-                user: !!process.env.EMAIL_USER,
-                pass: !!process.env.EMAIL_PASS
-            }
-        });
     }
 });
 
@@ -1672,11 +1642,11 @@ app.post('/api/tickets/resolve/:id', verifyToken, verifyAdmin, async (req, res) 
             sender: 'Admin'
         }], { session });
 
-        // Send Email (Fire-and-Forget)
-        const user = await Account.findOne({ accountNumber: ticket.userId }).session(session);
-        if (user) {
-            sendTicketResolvedEmail(user, ticket).catch(err => console.error("Ticket Email Failed:", err.message));
-        }
+        // Send Email (Removed)
+        // const user = await Account.findOne({ accountNumber: ticket.userId }).session(session);
+        // if (user) {
+        //     sendTicketResolvedEmail(user, ticket).catch(err => console.error("Ticket Email Failed:", err.message));
+        // }
 
         await session.commitTransaction();
         res.json({ message: "Ticket Updated", ticket });

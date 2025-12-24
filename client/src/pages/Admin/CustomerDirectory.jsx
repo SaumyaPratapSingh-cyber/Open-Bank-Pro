@@ -1,7 +1,7 @@
+// Customer Directory Code Cleaned
 import React, { useState, useEffect } from 'react';
-import { getAllCustomers, resendWelcomeEmail, debugEmail } from '../../api';
-import axios from 'axios';
-import { Search, Filter, ArrowUpDown, ChevronRight, Download, Users, RefreshCcw, Send } from 'lucide-react';
+import { getAllCustomers } from '../../api';
+import { Search, Filter, ArrowUpDown, ChevronRight, Download, Users, RefreshCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const CustomerDirectory = () => {
@@ -9,15 +9,6 @@ const CustomerDirectory = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('ALL');
-
-    const handleTestEmail = async () => {
-        try {
-            const res = await debugEmail();
-            alert("SMTP Status: " + JSON.stringify(res.data, null, 2));
-        } catch (err) {
-            alert("SMTP Test Failed: " + JSON.stringify(err.response?.data || err.message));
-        }
-    };
 
     const [error, setError] = useState(null);
 
@@ -65,12 +56,6 @@ const CustomerDirectory = () => {
                     <p className="text-slate-400 text-sm font-medium">Global registry of all bank account holders.</p>
                 </div>
                 <div className="flex gap-3">
-                    <button
-                        onClick={handleTestEmail}
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-500/10 text-purple-400 rounded-xl border border-purple-500/20 hover:bg-purple-500/20 transition-colors text-xs font-bold uppercase tracking-wider"
-                    >
-                        🐞 Test Email
-                    </button>
                     <button className="flex items-center gap-2 px-4 py-2 bg-white/5 text-slate-300 rounded-xl border border-white/5 hover:bg-white/10 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider">
                         <Download size={14} /> Export CSV
                     </button>
@@ -185,7 +170,6 @@ const CustomerDirectory = () => {
                                         {new Date(c.createdAt).toLocaleDateString()}
                                     </td>
                                     <td className="p-5 text-right flex justify-end gap-2">
-                                        <ResendEmailButton customer={c} />
                                         <button
                                             onClick={() => navigate(`/admin/customer-360?id=${c.accountNumber}`)}
                                             className="p-2 hover:bg-white/10 rounded-lg text-slate-500 hover:text-cyan-400 transition-colors"
@@ -201,45 +185,6 @@ const CustomerDirectory = () => {
                 </div>
             </div>
         </div>
-    );
-};
-
-const ResendEmailButton = ({ customer }) => {
-    const [status, setStatus] = useState('IDLE'); // IDLE, LOADING, SUCCESS, ERROR
-
-    const handleResend = async (e) => {
-        e.stopPropagation();
-        if (status === 'LOADING') return;
-
-        setStatus('LOADING');
-        try {
-            await resendWelcomeEmail(customer.accountNumber);
-            setStatus('SUCCESS');
-            setTimeout(() => setStatus('IDLE'), 2000); // Reset after 2s
-        } catch (err) {
-            console.error("Email failed detailed:", JSON.stringify(err.response?.data || err.message));
-            setStatus('ERROR');
-            setTimeout(() => setStatus('IDLE'), 3000);
-        }
-    };
-
-    return (
-        <button
-            onClick={handleResend}
-            disabled={status === 'LOADING' || status === 'SUCCESS'}
-            className={`p-2 rounded-lg transition-all duration-300 ${status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-400' : status === 'ERROR' ? 'bg-rose-500/10 text-rose-400' : 'hover:bg-white/10 text-slate-500 hover:text-emerald-400'}`}
-            title="Resend Welcome Email"
-        >
-            {status === 'LOADING' ? (
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            ) : status === 'SUCCESS' ? (
-                <span className="text-[10px] font-bold">SENT</span>
-            ) : status === 'ERROR' ? (
-                <span className="text-[10px] font-bold">FAIL</span>
-            ) : (
-                <Send size={16} />
-            )}
-        </button>
     );
 };
 

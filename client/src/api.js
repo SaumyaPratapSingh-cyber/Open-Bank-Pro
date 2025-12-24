@@ -56,9 +56,6 @@ export const freezeAccount = (data) => API.post('/admin/freeze-account', data);
 export const changeUserRole = (data) => API.post('/admin/change-role', data);
 export const getAllCustomers = () => API.get('/admin/customers');
 export const sendAdminNotification = (data) => API.post('/admin/notify', data);
-export const resendWelcomeEmail = (accountNumber) => API.post('/admin/resend-welcome', { accountNumber });
-export const getAdminStats = () => API.get('/admin/stats');
-export const debugEmail = () => API.get('/admin/debug-email');
 
 export const convertCurrency = (data) => API.post('/forex/convert', data);
 

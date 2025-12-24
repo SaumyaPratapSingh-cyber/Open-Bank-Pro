@@ -1628,7 +1628,7 @@ app.post('/api/tickets/resolve/:id', verifyToken, verifyAdmin, async (req, res) 
             sender: 'Admin'
         }], { session });
 
-        // Send Email
+        // Send Email (Fire-and-Forget)
         const user = await Account.findOne({ accountNumber: ticket.userId }).session(session);
         if (user) {
             sendTicketResolvedEmail(user, ticket).catch(err => console.error("Ticket Email Failed:", err.message));

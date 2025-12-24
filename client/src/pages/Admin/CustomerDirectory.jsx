@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { getAllCustomers, resendWelcomeEmail } from '../../api';
+import { getAllCustomers, resendWelcomeEmail, debugEmail } from '../../api';
 import axios from 'axios';
 import { Search, Filter, ArrowUpDown, ChevronRight, Download, Users, RefreshCcw, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -12,11 +11,7 @@ const CustomerDirectory = () => {
 
     const handleTestEmail = async () => {
         try {
-            const token = localStorage.getItem('token');
-            // Using relative path assuming proxy or same domain, otherwise fallback to configured API logic
-            const res = await axios.get('/api/admin/debug-email', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await debugEmail();
             alert("SMTP Status: " + JSON.stringify(res.data, null, 2));
         } catch (err) {
             alert("SMTP Test Failed: " + JSON.stringify(err.response?.data || err.message));

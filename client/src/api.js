@@ -1,9 +1,15 @@
 import axios from 'axios';
 
-// const API = axios.create({ baseURL: 'http://localhost:5000/api' });
+// AUTOMATIC ENVIRONMENT DETECTION
+// If running 'npm run dev' -> localhost
+// If running 'npm run build' -> production (render.com)
+const BASE_URL = import.meta.env.MODE === 'development'
+    ? 'http://localhost:5000/api'
+    : 'https://open-bank-pro.onrender.com/api';
+
 const API = axios.create({
-    baseURL: 'https://open-bank-pro.onrender.com/api',
-    timeout: 40000 // 40 seconds timeout (must be > backend timeout)
+    baseURL: BASE_URL,
+    timeout: 40000 // 40 seconds timeout
 });
 
 // Add a request interceptor to attach the Token to every request (if we have one)
@@ -52,6 +58,7 @@ export const getAllCustomers = () => API.get('/admin/customers');
 export const sendAdminNotification = (data) => API.post('/admin/notify', data);
 export const resendWelcomeEmail = (accountNumber) => API.post('/admin/resend-welcome', { accountNumber });
 export const getAdminStats = () => API.get('/admin/stats');
+export const debugEmail = () => API.get('/admin/debug-email');
 
 export const convertCurrency = (data) => API.post('/forex/convert', data);
 

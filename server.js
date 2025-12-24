@@ -206,7 +206,8 @@ app.post('/api/login', async (req, res) => {
         if (!isMatch) return res.status(400).json({ error: "Invalid Credentials" });
 
         // Send Login Alert (Async)
-        sendLoginAlert(user).catch(err => console.error("Email Error:", err.message));
+        // Send Login Alert (Async) - REMOVED
+        // sendLoginAlert(user).catch(err => console.error("Email Error:", err.message));
 
         // Create Token
         const token = jwt.sign({ id: user.accountNumber }, JWT_SECRET, { expiresIn: '1h' });
@@ -255,7 +256,8 @@ app.post('/api/auth/forgot-password-init', async (req, res) => {
         await user.save();
 
         // Send OTP via Email (Primary)
-        await sendOTP(user.email, otp).catch(err => console.error("Email OTP Failed:", err));
+        // Send OTP via Email (Primary) - REMOVED
+        // await sendOTP(user.email, otp).catch(err => console.error("Email OTP Failed:", err));
 
         // Send OTP via SMS (Optional / Fallback) - If credentials exist
         try {
@@ -460,27 +462,10 @@ app.post('/api/admin/notify', verifyToken, verifyAdmin, async (req, res) => {
 });
 
 // G2. Resend Welcome Email (For Old Customers)
-app.post('/api/admin/resend-welcome', verifyToken, verifyAdmin, async (req, res) => {
-    try {
-        const { accountNumber } = req.body;
-        const user = await Account.findOne({ accountNumber });
-        if (!user) return res.status(404).json({ error: "User not found" });
-
-        // Ensure CIF exists (Legacy Support)
-        if (!user.cifNumber) {
-            user.cifNumber = 'CIF' + Math.floor(10000000 + Math.random() * 90000000);
-            await user.save();
-        }
-
-        // Send Email
-        // Send Email (Fire-and-Forget)
-        sendWelcomeEmail(user).catch(err => console.error("Resend Welcome Failed:", err.message));
-
-        res.json({ message: `Welcome Email Resent to ${user.email}` });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+// G2. Resend Welcome Email (REMOVED)
+// app.post('/api/admin/resend-welcome', verifyToken, verifyAdmin, async (req, res) => {
+//     res.status(410).json({ error: "Email Service Deprecated" });
+// });
 
 // H. Admin Dashboard Stats (Headquarters)
 app.get('/api/admin/stats', verifyToken, verifyAdmin, async (req, res) => {

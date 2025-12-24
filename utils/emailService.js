@@ -1,4 +1,6 @@
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -16,14 +18,22 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendEmail = async (to, subject, html) => {
-    // Let the error propagate so the caller handles it
-    await transporter.sendMail({
-        from: `"OpenBank Pro Security" <${process.env.EMAIL_USER}>`,
-        to,
-        subject,
-        html
-    });
-    console.log(`📧 Email sent to ${to}: ${subject}`);
+    try {
+        await transporter.sendMail({
+            from: `"OpenBank Pro Security" <${process.env.EMAIL_USER}>`,
+            to,
+            subject,
+            html
+        });
+        const logMsg = `[SUCCESS] ${new Date().toISOString()} - Email sent to ${to}\n`;
+        console.log(logMsg);
+        fs.appendFileSync(path.join(__dirname, '../email_debug.log'), logMsg);
+    } catch (error) {
+        const errorMsg = `[ERROR] ${new Date().toISOString()} - Failed to send to ${to}: ${error.message}\nStack: ${error.stack}\n`;
+        console.error(errorMsg);
+        fs.appendFileSync(path.join(__dirname, '../email_debug.log'), errorMsg);
+        throw error; // Re-throw to handle in caller if needed
+    }
 };
 
 const sendWelcomeEmail = async (user) => {

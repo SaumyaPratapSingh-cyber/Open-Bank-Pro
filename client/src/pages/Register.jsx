@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { registerUser } from '../api';
+import { generateWelcomePDF } from '../utils/generateWelcomePDF';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, MapPin, Lock, Upload, Calendar, ArrowRight, ShieldCheck, CheckCircle, Smartphone } from 'lucide-react';
@@ -37,7 +38,23 @@ function Register() {
     setLoading(true);
     setError('');
     try {
-      await registerUser(formData);
+      // 1. Register User
+      const res = await registerUser(formData);
+
+      // 2. Generate Welcome PDF (Official Confirmation)
+      try {
+        // We need to pass the user details. The API returns { message, accountNumber }.
+        // We can combine formData + accountNumber for the PDF.
+        const pdfData = {
+          ...formData,
+          accountNumber: res.data.accountNumber,
+          cifNumber: 'Generated on Login'
+        };
+        generateWelcomePDF(pdfData);
+      } catch (pdfErr) {
+        console.error("PDF Fail:", pdfErr);
+      }
+
       navigate('/login');
     } catch (err) {
       setError(err.response?.data?.error || 'Registration Failed');

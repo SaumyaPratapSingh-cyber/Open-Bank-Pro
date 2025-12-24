@@ -434,7 +434,7 @@ app.post('/api/admin/notify', verifyToken, verifyAdmin, async (req, res) => {
             sender: 'Admin'
         });
 
-        // Send Email
+        // Send Email (Fire-and-Forget)
         const user = await Account.findOne({ accountNumber });
         if (user) {
             sendAdminMessageEmail(user, title, message, type || 'INFO').catch(err => console.error("Admin Msg Email Failed:", err.message));
@@ -460,7 +460,8 @@ app.post('/api/admin/resend-welcome', verifyToken, verifyAdmin, async (req, res)
         }
 
         // Send Email
-        await sendWelcomeEmail(user);
+        // Send Email (Fire-and-Forget)
+        sendWelcomeEmail(user).catch(err => console.error("Resend Welcome Failed:", err.message));
 
         res.json({ message: `Welcome Email Resent to ${user.email}` });
     } catch (error) {

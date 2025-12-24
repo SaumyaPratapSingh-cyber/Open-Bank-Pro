@@ -6,15 +6,18 @@ const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
     secure: false, // true for 465, false for other ports
+    pool: true, // Use pooled connections
+    maxConnections: 5, // Limit concurrent connections
+    maxMessages: 100, // Limit messages per connection
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
-    connectionTimeout: 60000, // 60 seconds
-    greetingTimeout: 60000,
-    socketTimeout: 60000,
-    debug: true, // Show debug output
-    logger: true // Log to console
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+    debug: true,
+    logger: true
 });
 
 const sendEmail = async (to, subject, html) => {

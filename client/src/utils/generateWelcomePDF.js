@@ -82,9 +82,22 @@ Your account is now active and ready for immediate transactions. Below are your 
     const finalY = doc.lastAutoTable.finalY + 30;
 
     // Digital Stamp / Signature Place
-    doc.setDrawColor(13, 148, 136);
-    doc.setLineWidth(1);
-    doc.line(20, finalY, 80, finalY); // Signature Line
+    // doc.setDrawColor(13, 148, 136);
+    // doc.setLineWidth(1);
+    // doc.line(20, finalY, 80, finalY); // Signature Line
+
+    // Add Signature Image (Assuming standard A4 and reasonable size)
+    const signatureUrl = '/signature.png';
+    const sigImg = new Image();
+    sigImg.src = signatureUrl;
+    // We attempt to add it. If it loads in time (which it should for local assets usually), it shows.
+    // For production reliability with sync jsPDF, ensuring pre-load is better, but this often works for simple cases.
+    try {
+        doc.addImage(sigImg, 'PNG', 20, finalY - 15, 50, 20); // x, y, w, h
+    } catch (e) {
+        // Fallback if image fails
+        doc.line(20, finalY, 80, finalY);
+    }
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
